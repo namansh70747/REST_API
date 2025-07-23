@@ -28,6 +28,7 @@ func main() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/api/students", student.New(storage))
+	router.HandleFunc("/api/students/{id}", student.GetById(storage))
 	//database setup
 	//setup router
 

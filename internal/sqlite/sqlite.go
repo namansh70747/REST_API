@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/namsh70747/Rest_API/internal/config"
+	"github.com/namsh70747/Rest_API/internal/types"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -50,4 +51,20 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 		return 0, err
 	}
 	return id, nil
+}
+
+func (s *Sqlite) GetStudentById(id int) (types.Student, error) {
+	stmt, err := s.Db.Prepare("SELECT id,name,email,age,created_at,updated_at FROM students WHERE id = ?")
+	if err != nil {
+		return types.Student{}, err
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRow(id)
+	var student types.Student
+	err = row.Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.CreatedAt, &student.UpdatedAt)
+	if err != nil {
+		return types.Student{}, err
+	}
+	return student, nil
 }
