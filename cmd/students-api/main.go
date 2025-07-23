@@ -11,17 +11,23 @@ import (
 	"time"
 
 	"github.com/namsh70747/Rest_API/internal/config"
+	"github.com/namsh70747/Rest_API/internal/http/handlers/student"
+	"github.com/namsh70747/Rest_API/internal/sqlite"
 )
 
 // load config
 func main() {
 	cfg := config.MustLoad()
+
+	storage, err := sqlite.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = storage
+	slog.Info("storage initialized", slog.String("path", cfg.Env), slog.String("version", "1.0.0"))
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to students API"))
-	})
-
+	router.HandleFunc("/api/students", student.New(storage))
 	//database setup
 	//setup router
 
@@ -34,7 +40,7 @@ func main() {
 	fmt.Printf("server started %s", cfg.HTTPServer.Addr)
 
 	done := make(chan os.Signal, 1)
-	signal.Notify(done,os.Interrupt)
+	signal.Notify(done, os.Interrupt)
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
@@ -47,7 +53,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
 	if err != nil {
 		slog.Error("failed to shutdown server", slog.String("error", err.Error()))
 
